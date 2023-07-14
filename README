@@ -1,0 +1,55 @@
+
+
+
+
+first i will explain the ipv4 header:
+
+-here i did a new c file named trie for the trie functions 
+
+
+1. IPV4
+
+
+it the while i did an if for ipv4 header that is in the ethernet 2048
+after that i verigy if the packet is for me. if it is i send and icmp response for the prefix_length
+if not i will do other verifications:
+    if the ttl expires i send a icmp or if the checksum fails i just drop the packet
+    then after this i update the checksum with the formula from laboratory
+
+    after that i am searching for the next hop in the router table with the trie like this:
+->lpm algorithm:        
+    at the begining i just read form the txt of the rounter entrie and then i put them in the trie (insert_route_entry)
+    in this function i calculate the mask in int 255.255.255.0 -> /24 and then i take the first mask bits in the prefix and i 
+    make a binary tree with them. if i have the prefix like 10010 i will do in the binary tree different nodes, whre right is 1 and left is 0
+    and in the final node is my entry 
+
+    so in the route search i jsut search in this binary tree for all the bits in the dest addres in the ipv4 header
+    if i find a null node i just break from the search and save the last entry in a variable (there will be my next hop)
+
+
+    after this search for the next hop i am trying to find the mac of the next hop
+    if i find it in the arp table i just send the packet with the macs int the eth header changes (the dest will be in the arp table adn source is the
+    mac of my interface)
+    if the arp table dosent have the entry then i make an arp request:
+        ->arp request:
+            here i make an arp reequest packet where i populate the arp struct fields
+            i put in the eth source and ip source my router ip an mac
+            and for dest mac and ip i put the broadcast mac and the ip 0.0.0.0 bcs i search for a mac that i dont have, and then i send it on the interface whre the
+            next hop is
+            my packet will be saved in a queue from where i will push it later
+
+
+    in the else of the if i handled the arp requests and replyes given:
+
+2. ARP:
+    
+    -if i got a reply i must get out the first packet in the queue and then send it with the info in the reply (bcs i got a new mac)
+    and of course is put the new entry in the arp table so the next packet will know this dest
+
+    -if i got a requst i will send a reply like:
+        i am putting in the source ip and mac my ip and mac and in the dest i am putting the one int the arp of the request and then i jsut send them
+
+
+3.ICMP :
+    i did two icmps for errorr and for a ping on my own interface
+    for both i did a new ipv4 packet that i populated and tehn send with the information given
